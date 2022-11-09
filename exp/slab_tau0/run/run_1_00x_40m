@@ -71,7 +71,7 @@ set analysis_dir = ${fms_home:h}/analysis/$analysis_version                 # lo
 source /etc/profile.d/modules.csh
 
 # Fram, 2018
-module load hdf5/1.10.2
+module load hdf5/1.10.1
 module load netcdf-c/4.6.1
 module load netcdf-fortran/4.4.4
 module load ncview
@@ -95,7 +95,7 @@ set output_dir  = $run_dir/output                    # output directory will be 
 set platform    = ifc                                # a unique identifier for your platform
 
 # note the following init_cond's are overwritten later if reload_commands exists
-set init_cond   = "/central/groups/esm/zhaoyi/fms/restart/day2000h00.cpio"
+set init_cond   = ""
 
 set pathnames   = $exp_home/input/path_names                       # path to file containing list of source paths
 
@@ -574,6 +574,8 @@ cd $exp_home/run
 
 if ($ireload > $num_script_runs) then
   echo "Note: not resubmitting job."
+  cp -r $output_dir/restart/ $data_dir/
+  cp $output_dir/reload_commands* $data_dir/
 else
   echo "Submitting run $ireload."
   srun $run_script
