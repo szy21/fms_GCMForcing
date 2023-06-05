@@ -1,62 +1,62 @@
 #!/bin/csh -f
 #SBATCH --ntasks=32
 ##SBATCH --nodes=1
-#SBATCH --mem-per-cpu=8G 
-#SBATCH --time=2:00:00 
-#SBATCH --job-name=fms_default
+#SBATCH --mem-per-cpu=8G
+#SBATCH --time=2:00:00
+#SBATCH --job-name=T42-X.5
 #SBATCH --output=out_err/slurm_%j.out
-#SBATCH --error=out_err/slurm_%j.err 
+#SBATCH --error=out_err/slurm_%j.err
 #SBATCH --export=ALL
 #SBATCH --partition=any
 
 # === Default test run script for idealized GCM ===
 
 # See description at run_test.readme
- 
+
 # Ian Eisenman, Yohai Kaspi, Tim Merlis, November 2010
-# Farid Ait Chaalal, Xavier Levine, Zhihong Tan, March 2012 
+# Farid Ait Chaalal, Xavier Levine, Zhihong Tan, March 2012
 # Farid Ait Chaalal, September 2012
 # Robb Wills, Ori Adam, May 2014
 
-# change the working directory (default is home directory) 
+# change the working directory (default is home directory)
 cd $SLURM_SUBMIT_DIR
-echo $SLURM_SUBMIT_DIR 
+echo $SLURM_SUBMIT_DIR
 
-set model_type     = dry                          # if "moist", the moist model is run and if "dry, it is the dry. "moist_hydro" is for the bucket hydrology model. The namelists for the parameters are below (L212). 
+set model_type     = dry                          # if "moist", the moist model is run and if "dry, it is the dry. "moist_hydro" is for the bucket hydrology model. The namelists for the parameters are below (L212).
 set analysis_type  = 3d                             # choose type of analysis: 2d (zonally averaged) or 3d (zonally varying) outputs
-set run_name       = control                           # label for run; output dir and working dir are run_name specific
-set run_script     = $cwd/run_${run_name}           # path/name of this run script (for resubmit) 
-set exp_home       = $cwd:h                         # directory containing run/$run_script and input/ 
-set exp_name       = $exp_home:t                    # name of experiment (i.e., name of this model build) 
+set run_name       = T42_ka_-20_ks_-2                           # label for run; output dir and working dir are run_name specific
+set run_script     = $cwd/run_${run_name}           # path/name of this run script (for resubmit)
+set exp_home       = $cwd:h                         # directory containing run/$run_script and input/
+set exp_name       = $exp_home:t                    # name of experiment (i.e., name of this model build)
 set fms_home       = $cwd:h:h:h/idealized           # directory containing model source code, etc, usually /home/$USER/fms/idealized
 
-echo $fms_home 
- 
-set days            = 2                             # length of integration 
+echo $fms_home
+
+set days            = 500                             # length of integration
 set runs_per_script = 2                            # number of runs within this script
-set start_analysis  = 2                            # number of script run at which to start analysis (after spin-up) 
+set start_analysis  = 2                            # number of script run at which to start analysis (after spin-up)
 set num_script_runs = 1                              # how many times to resubmit script to queue
 set days_per_segment = ${days}                       # days per segment of analysis (for seasonally-varying analysis)
 
 @ num_segments       = ${days} / ${days_per_segment} # number of analysis segments
 echo num_segments    = $num_segments
 
-# find data directory location, 
+# find data directory location,
 
-#set data_dir_base = $cwd:h:h:h:h/ 
-set data_dir_base = /central/scratch/${USER}/fms/
+#set data_dir_base = $cwd:h:h:h:h/
+set data_dir_base = /central/scratch/${USER}/fms_idealized/
 set data_dir = ${data_dir_base}/fms_output/${exp_name}/${run_name}
- 
-set out_freq = '1xday' #also needs to be changed in ../input/diag_table 
 
-set echo  
+set out_freq = '1xday' #also needs to be changed in ../input/diag_table
+
+set echo
 echo "*** Running ${run_script} on $HOSTNAME ***"
 date
 
 #----------------------------------------------------------------------
 
-# zonally averaged analysis 
-set analysis_version = analysis_${analysis_type} 
+# zonally averaged analysis
+set analysis_version = analysis_${analysis_type}
 set analysis_script = run_analysis_${model_type}_${analysis_type}_hpc
 set diagtable   = $exp_home/input/diag_table_${model_type}_${analysis_type}     # path to diagnostics table
 
@@ -79,10 +79,10 @@ module load intel/18.1
 
 #--------------------------------------------------------------------------------------------------------
 
-limit stacksize unlimited 
+limit stacksize unlimited
 
-cd $exp_home 
- 
+cd $exp_home
+
 # define variables
 set tmpdir      = ${data_dir_base}/fms_tmp/${exp_name}          # temporary directory for model workdir, output, etc
 set run_dir     = $tmpdir/$run_name                  # tmp directory for current run
@@ -111,9 +111,9 @@ set ireload     = 1                                  # counter for resubmitting 
 set irun        = 1                                  # counter for multiple model submissions within this script
 #--------------------------------------------------------------------------------------------------------
 
-# if exists, load reload file 
+# if exists, load reload file
 
-set reload_file = ${run_dir}/reload_commands 
+set reload_file = ${run_dir}/reload_commands
 
 if ( -d $run_dir )  then
   if ( -f $reload_file ) then
@@ -140,7 +140,7 @@ endif
 
 if ( ! -d $output_dir )  then
   mkdir -p $output_dir
-  mkdir -p $output_dir/combine  
+  mkdir -p $output_dir/combine
   mkdir -p $output_dir/logfiles
   mkdir -p $output_dir/restart
 endif
@@ -161,7 +161,7 @@ endif
 echo "fms_home = $fms_home" >> $workdir/tmp_template
 
 
-# Prepend fortran files in srcmods directory to pathnames. 
+# Prepend fortran files in srcmods directory to pathnames.
 # Use 'find' to make list of srcmod/*.f90 files. mkmf uses only the first instance of any file name.
 cd $sourcedir
 find $exp_home/srcmods/ -maxdepth 1 -iname "*.f90" -o -iname "*.inc" -o -iname "*.c" -o -iname "*.h" > $workdir/tmp_pathnames
@@ -197,10 +197,10 @@ endif
 
 #--------------------------------------------------------------------------------------------------------
 
-#  --- begin loop over $irun ---                                     
+#  --- begin loop over $irun ---
 while ($irun <= $runs_per_script)
 
-    cd $workdir  
+    cd $workdir
 
     # set run length and time step, get input data and executable
     if ( $ireload == 1 && $irun == 1 ) then
@@ -219,10 +219,10 @@ EOF
 EOF
     endif
 
-    if (${model_type} == dry) then 
+    if (${model_type} == dry) then
     cat >> input.nml <<EOF
 
-      &atmosphere_nml      
+      &atmosphere_nml
 	two_stream           = .false.,
 	turb                 = .true.,
 	ldry_convection      = .false.,
@@ -233,7 +233,7 @@ EOF
 	tapio_forcing        = .false.,
 	hs                   = .true.,
 	atmos_water_correction = .false.,
-	roughness_mom        = 0.05, 
+	roughness_mom        = 0.05,
 	roughness_heat       = 0.05,
 	roughness_moist      = 0.05,
 	bucket               = .false./
@@ -244,8 +244,8 @@ EOF
     cat >> input.nml <<EOF
 
 
-      &grid_phys_list 
-	tsfc_sp                  = 260.0, 
+      &grid_phys_list
+	tsfc_sp                  = 260.0,
 	delh                     = 90.,
 	ka_days                  = 50.0,
 	ks_days                  = 7.0,
@@ -262,6 +262,42 @@ EOF
       &diag_manager_nml
         mix_snapshot_average_fields = .true. /
 
+      &spectral_dynamics_nml
+        damping_option          = 'resolution_dependent',
+        damping_order           = 4,
+        damping_coeff           = 6.9444444e-05,
+        cutoff_wn               = 15,
+        do_mass_correction      =.true.,
+        do_energy_correction    =.true.,
+        do_water_correction     =.false.,
+        do_spec_tracer_filter   =.false.,
+        use_virtual_temperature =.false.,
+        vert_advect_uv          = 'second_centered',
+        vert_advect_t           = 'second_centered',
+        longitude_origin        = 0.,
+        robert_coeff            = .04,
+        raw_factor              = 0.53,
+        alpha_implicit          = .5,
+        reference_sea_level_press = 1.e5,
+        lon_max                 = 128,
+        lat_max                 = 64,
+        num_levels              = 20,
+        num_fourier             = 42,
+        num_spherical           = 43,
+        fourier_inc             = 1,
+        triang_trunc            =.true.,
+        valid_range_t 	        = 100. 800.,
+        vert_coord_option       = 'uneven_sigma',
+        topography_option       = 'flat',
+        surf_res                = 0.1,
+        scale_heights           = 5.0,
+        exponent                = 2.0,
+        do_no_eddy_eddy         = .false./
+
+      &hs_forcing_nml
+        ka      = -20.0,
+        ks      = -2.0/
+
 EOF
     endif
 
@@ -272,13 +308,13 @@ EOF
 
     cp input.nml $run_dir
 
-    
+
     #--------------------------------------------------------------------------------------------------------
-  
+
     # run the model with mpirun
     set MX_RCACHE=2
     srun ${workdir}/fms.x
-    
+
     #--------------------------------------------------------------------------------------------------------
 
     #   --- generate date for file names ---
@@ -289,7 +325,7 @@ EOF
 
     #--------------------------------------------------------------------------------------------------------
 
-    #   --- move output files to their own directories (don't combine) --- 
+    #   --- move output files to their own directories (don't combine) ---
 
     mkdir $output_dir/combine/$date_name
 
@@ -303,12 +339,12 @@ EOF
 	mv $out $output_dir/logfiles/$date_name.$out
     end
 
-    #   --- move restart files to output directory --- 
+    #   --- move restart files to output directory ---
 
     cd $workdir/RESTART
     set resfiles = `/bin/ls *.res*`
     if ( $#resfiles > 0 ) then
-	#     --- desired filename for cpio of output restart files ---	
+	#     --- desired filename for cpio of output restart files ---
 	set restart_file = $output_dir/restart/$date_name.cpio
 	if ( ! -d $restart_file:h ) mkdir -p $restart_file:h
 	#     --- also save namelist and diag_table ---
@@ -317,7 +353,7 @@ EOF
 	/bin/ls $files | cpio -ocv > $restart_file:t
 	mv $restart_file:t $restart_file
 	#     --- set up restart for next run ---
-	if ( $irun < $runs_per_script ) then 
+	if ( $irun < $runs_per_script ) then
 	    mv -f *.res*  ../INPUT
 	endif
     endif
@@ -345,7 +381,7 @@ EOF
        set init_cond = $init_cond_tmp
     endif
     if ( -f $reload_file ) mv -f $reload_file $reload_file"_prev"
-    
+
     if ( $irun <= $runs_per_script ) then
 	echo "set irun         =  $irun"          >  $reload_file
     else
@@ -355,16 +391,16 @@ EOF
 
     echo     "set init_cond    =  $restart_file"  >> $reload_file
     echo     "set ireload      =  $ireload"       >> $reload_file
- 
+
     ############################# post processing ############################
-    
+
     cd $run_analysis
     if (${run_number} >= ${start_analysis}) then # combine data and do analysis
 
         # need to be careful not to write on top of file for analysis job currently pending in queue.
         # put each job in separate directory.
         set postproc_dir = ${run_analysis}/${date_name} # directory for this analysis run
-        
+
         if ( ! -e $postproc_dir ) then
           mkdir -p ${postproc_dir}
         else
@@ -373,8 +409,8 @@ EOF
           echo "WARNING: Existing analysis directory ${postproc_dir} removed."
         endif
         cd ${postproc_dir}
-    
-	echo "set exp_name = $exp_name" > post_processing_info 
+
+	echo "set exp_name = $exp_name" > post_processing_info
 	echo "set data_dir = $data_dir" >> post_processing_info
 	echo "set run_name = $run_name" >> post_processing_info
 	echo "set run_script = $run_script" >> post_processing_info
@@ -384,14 +420,14 @@ EOF
 	echo "set tmpdir = $tmpdir" >> post_processing_info
         # specify model resolution, which is set in spectral_dynamics_nml section of input/namelists
         echo "set `grep num_fourier $namelist | tr ',' ' ' `" >> post_processing_info
-	echo "set irun = $irun_prev" >> post_processing_info 
+	echo "set irun = $irun_prev" >> post_processing_info
 	echo "set runs_per_script = $runs_per_script" >> post_processing_info
         # information for segmentation of analysis
         echo "set days_per_segment = $days_per_segment" >> post_processing_info
 	echo "set num_segments = $num_segments" >> post_processing_info
 	echo "set isegment = 1" >> post_processing_info
         echo "set fms_output_freq = $out_freq" >> post_processing_info
-    
+
         cp $analysis_dir/run/$analysis_script ./
         set src_dir        = $analysis_dir/src           # prefix for path_names
         set exe_dir        = $run_analysis/exe.analysis                 # executable directory
@@ -441,5 +477,5 @@ else
 endif
 
 date
- 
- 
+
+
