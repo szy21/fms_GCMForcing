@@ -36,7 +36,7 @@ set fms_home       = $cwd:h:h:h/idealized           # directory containing model
 
 echo $fms_home 
  
-set days            = 500                             # length of integration 
+set days            = 2                             # length of integration 
 set runs_per_script = 2                            # number of runs within this script
 set start_analysis  = 2                            # number of script run at which to start analysis (after spin-up) 
 set num_script_runs = 1                              # how many times to resubmit script to queue
